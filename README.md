@@ -6,9 +6,10 @@ LoRaWAN-based precision agriculture system for DakLak, Vietnam.
 
 | Component | Model | Role | Status |
 |-----------|-------|------|--------|
-| Gateway | E870-L915LG12 | LoRaWAN concentrator | ✅ Documented |
-| Node (DTU) | E90-DTU(900SL22) | LoRa data radio (sensor bridge) | ✅ Documented |
-| Sensor | Soil Multi-Parameter (Temp/Moisture/EC/NPK/pH) | Field data采集 | ✅ Documented |
+| Gateway | E870-L915LG12 | LoRaWAN concentrator | ✅ Đã có |
+| Node (LoRaWAN) | **E78-DTU(900LN22)** | LoRaWAN node (RS485 bridge) | ✅ Đã có |
+| Node (Raw LoRa) | E90-DTU(900SL22) | LoRa data radio (备用) | ✅ Đã có |
+| Sensor | Soil Multi-Parameter (Temp/Moisture/EC/NPK/pH) | Field data采集 | ✅ Đã có |
 
 ## Quick Links
 
