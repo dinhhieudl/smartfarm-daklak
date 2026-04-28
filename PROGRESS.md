@@ -66,12 +66,17 @@ smartfarm-daklak/
 │   ├── software/
 │   │   └── vendor-software-analysis.md      ✅ Vendor software analysis
 │   ├── setup/
-│   │   └── chirpstack-setup.md              ✅ ChirpStack install guide
+│   │   ├── chirpstack-setup.md              ✅ ChirpStack install guide
+│   │   └── e78-dtu-at-commands.md           ✅ E78-DTU AT command reference
 │   └── code/
 │       └── example_modbus.c                 ✅ Modbus RTU C code
 ├── server/
 │   ├── docker-compose.yml                   ✅ Full server stack
+│   ├── setup.bat                            ✅ Windows setup script
+│   ├── setup.sh                             ✅ Linux/macOS setup script
 │   ├── config/                              ✅ ChirpStack, Mosquitto, Grafana configs
+│   │   ├── chirpstack-payload-decoder.js    ✅ Payload decoder (JavaScript)
+│   │   └── grafana/alerting/soil-alerts.json ✅ Alert rules (6 rules)
 │   └── README.md                            ✅ Server instructions
 └── software/
     ├── 查看数据软件/                          ✅ ModScan32 + ModSim32 (diagnostic tools)
@@ -81,16 +86,18 @@ smartfarm-daklak/
 ## Việc còn lại (TODO)
 
 - [x] ~~Mua E78-DTU(900LN22)~~ → Đã có
-- [ ] Test sensor với ModScan32 (commissioning)
-- [ ] Cấu hình E78-DTU: AT command cho LoRaWAN join + Modbus polling
-- [ ] Register gateway + device trong ChirpStack
-- [ ] Viết payload decoder JavaScript trong ChirpStack
-- [ ] Cấu hình Node-RED flow: MQTT → Decode → InfluxDB
-- [ ] Tạo Grafana dashboard với panels cho từng thông số
+- [x] Viết payload decoder JavaScript → `server/config/chirpstack-payload-decoder.js`
+- [x] Cấu hình Node-RED flow (MQTT → Decode → InfluxDB) → `server/config/node-red-flows.json`
+- [x] Tạo Grafana dashboard → `server/config/grafana/dashboards/soil-monitoring.json`
+- [x] Cài alert rules (moisture, pH, temp, EC, sensor offline) → `server/config/grafana/alerting/soil-alerts.json`
+- [x] E78-DTU AT command reference → `docs/setup/e78-dtu-at-commands.md`
+- [x] Setup script (Windows + Linux) → `server/setup.bat` + `server/setup.sh`
+- [ ] Test sensor với ModScan32 (commissioning) — **cần hardware**
+- [ ] Cấu hình E78-DTU: AT command cho LoRaWAN join + Modbus polling — **cần hardware**
+- [ ] Register gateway + device trong ChirpStack — **cần deploy server**
 - [ ] Deploy server (docker compose up -d trên laptop)
-- [ ] Lắp sensor + node ngoài vườn (solar power)
-- [ ] Kiểm tra end-to-end data flow
-- [ ] Cài alert rules (moisture < 20%, pH bất thường)
+- [ ] Lắp sensor + node ngoài vườn (solar power) — **cần hardware**
+- [ ] Kiểm tra end-to-end data flow — **cần toàn bộ hệ thống**
 
 ## Session Context (cho AI)
 

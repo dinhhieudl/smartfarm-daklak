@@ -1,0 +1,311 @@
+{
+  "apiVersion": 1,
+  "contactPointName": "smartfarm-alerts",
+  "groups": [
+    {
+      "orgId": 1,
+      "name": "SmartFarm Soil Alerts",
+      "folder": "",
+      "interval": "5m",
+      "rules": [
+        {
+          "uid": "soil-moisture-low",
+          "title": "🔴 Soil Moisture Too Low",
+          "condition": "C",
+          "data": [
+            {
+              "refId": "A",
+              "relativeTimeRange": { "from": 3600, "to": 0 },
+              "datasourceUid": "influxdb",
+              "model": {
+                "query": "from(bucket: \"soil_data\")\n  |> range(start: -1h)\n  |> filter(fn: (r) => r._measurement == \"soil\")\n  |> filter(fn: (r) => r._field == \"moisture\")\n  |> last()",
+                "refId": "A"
+              }
+            },
+            {
+              "refId": "C",
+              "relativeTimeRange": { "from": 3600, "to": 0 },
+              "datasourceUid": "__expr__",
+              "model": {
+                "type": "threshold",
+                "expression": "A",
+                "conditions": [
+                  {
+                    "evaluator": {
+                      "params": [20],
+                      "type": "lt"
+                    },
+                    "operator": { "type": "and" },
+                    "query": { "params": ["C", "1m", "now"] },
+                    "reducer": { "params": [], "type": "last" },
+                    "type": "query"
+                  }
+                ]
+              }
+            }
+          ],
+          "noDataState": "NoData",
+          "execErrState": "Alerting",
+          "for": "10m",
+          "annotations": {
+            "summary": "Độ ẩm đất dưới 20% — cần tưới ngay!",
+            "description": "Cảm biến ghi nhận độ ẩm đất {{ $values.A }}%, thấp hơn ngưỡng 20%. Kiểm tra hệ thống tưới."
+          },
+          "labels": {
+            "severity": "critical",
+            "team": "smartfarm"
+          }
+        },
+        {
+          "uid": "soil-moisture-high",
+          "title": "🟡 Soil Moisture Too High",
+          "condition": "C",
+          "data": [
+            {
+              "refId": "A",
+              "relativeTimeRange": { "from": 3600, "to": 0 },
+              "datasourceUid": "influxdb",
+              "model": {
+                "query": "from(bucket: \"soil_data\")\n  |> range(start: -1h)\n  |> filter(fn: (r) => r._measurement == \"soil\")\n  |> filter(fn: (r) => r._field == \"moisture\")\n  |> last()",
+                "refId": "A"
+              }
+            },
+            {
+              "refId": "C",
+              "relativeTimeRange": { "from": 3600, "to": 0 },
+              "datasourceUid": "__expr__",
+              "model": {
+                "type": "threshold",
+                "expression": "A",
+                "conditions": [
+                  {
+                    "evaluator": {
+                      "params": [85],
+                      "type": "gt"
+                    },
+                    "operator": { "type": "and" },
+                    "query": { "params": ["C", "1m", "now"] },
+                    "reducer": { "params": [], "type": "last" },
+                    "type": "query"
+                  }
+                ]
+              }
+            }
+          ],
+          "noDataState": "NoData",
+          "execErrState": "Alerting",
+          "for": "30m",
+          "annotations": {
+            "summary": "Độ ẩm đất trên 85% — nguy cơ ngập úng!",
+            "description": "Cảm biến ghi nhận độ ẩm đất {{ $values.A }}%, cao hơn ngưỡng 85%. Kiểm tra thoát nước."
+          },
+          "labels": {
+            "severity": "warning",
+            "team": "smartfarm"
+          }
+        },
+        {
+          "uid": "soil-ph-abnormal",
+          "title": "🧪 Soil pH Abnormal",
+          "condition": "C",
+          "data": [
+            {
+              "refId": "A",
+              "relativeTimeRange": { "from": 3600, "to": 0 },
+              "datasourceUid": "influxdb",
+              "model": {
+                "query": "from(bucket: \"soil_data\")\n  |> range(start: -1h)\n  |> filter(fn: (r) => r._measurement == \"soil\")\n  |> filter(fn: (r) => r._field == \"ph\")\n  |> last()",
+                "refId": "A"
+              }
+            },
+            {
+              "refId": "B",
+              "relativeTimeRange": { "from": 3600, "to": 0 },
+              "datasourceUid": "influxdb",
+              "model": {
+                "query": "from(bucket: \"soil_data\")\n  |> range(start: -1h)\n  |> filter(fn: (r) => r._measurement == \"soil\")\n  |> filter(fn: (r) => r._field == \"ph\")\n  |> last()",
+                "refId": "B"
+              }
+            },
+            {
+              "refId": "C",
+              "relativeTimeRange": { "from": 3600, "to": 0 },
+              "datasourceUid": "__expr__",
+              "model": {
+                "type": "threshold",
+                "expression": "A",
+                "conditions": [
+                  {
+                    "evaluator": {
+                      "params": [4.5, 8.5],
+                      "type": "outside_range"
+                    },
+                    "operator": { "type": "and" },
+                    "query": { "params": ["C", "1m", "now"] },
+                    "reducer": { "params": [], "type": "last" },
+                    "type": "query"
+                  }
+                ]
+              }
+            }
+          ],
+          "noDataState": "NoData",
+          "execErrState": "Alerting",
+          "for": "10m",
+          "annotations": {
+            "summary": "pH đất bất thường ({{ $values.A }}) — cần kiểm tra!",
+            "description": "Cảm biến ghi nhận pH đất {{ $values.A }}, nằm ngoài khoảng an toàn (4.5–8.5). Cần bón vôi hoặc lưu huỳnh để điều chỉnh."
+          },
+          "labels": {
+            "severity": "warning",
+            "team": "smartfarm"
+          }
+        },
+        {
+          "uid": "soil-temp-high",
+          "title": "🌡️ Soil Temperature Too High",
+          "condition": "C",
+          "data": [
+            {
+              "refId": "A",
+              "relativeTimeRange": { "from": 3600, "to": 0 },
+              "datasourceUid": "influxdb",
+              "model": {
+                "query": "from(bucket: \"soil_data\")\n  |> range(start: -1h)\n  |> filter(fn: (r) => r._measurement == \"soil\")\n  |> filter(fn: (r) => r._field == \"temperature\")\n  |> last()",
+                "refId": "A"
+              }
+            },
+            {
+              "refId": "C",
+              "relativeTimeRange": { "from": 3600, "to": 0 },
+              "datasourceUid": "__expr__",
+              "model": {
+                "type": "threshold",
+                "expression": "A",
+                "conditions": [
+                  {
+                    "evaluator": {
+                      "params": [40],
+                      "type": "gt"
+                    },
+                    "operator": { "type": "and" },
+                    "query": { "params": ["C", "1m", "now"] },
+                    "reducer": { "params": [], "type": "last" },
+                    "type": "query"
+                  }
+                ]
+              }
+            }
+          ],
+          "noDataState": "NoData",
+          "execErrState": "Alerting",
+          "for": "15m",
+          "annotations": {
+            "summary": "Nhiệt độ đất quá cao ({{ $values.A }}°C)!",
+            "description": "Nhiệt độ đất {{ $values.A }}°C, vượt ngưỡng 40°C. Cây trồng có thể bị stress nhiệt. Cân nhắc phủ mulch hoặc tưới降温."
+          },
+          "labels": {
+            "severity": "warning",
+            "team": "smartfarm"
+          }
+        },
+        {
+          "uid": "soil-ec-high",
+          "title": "⚡ Soil EC Too High (Salinity)",
+          "condition": "C",
+          "data": [
+            {
+              "refId": "A",
+              "relativeTimeRange": { "from": 3600, "to": 0 },
+              "datasourceUid": "influxdb",
+              "model": {
+                "query": "from(bucket: \"soil_data\")\n  |> range(start: -1h)\n  |> filter(fn: (r) => r._measurement == \"soil\")\n  |> filter(fn: (r) => r._field == \"ec\")\n  |> last()",
+                "refId": "A"
+              }
+            },
+            {
+              "refId": "C",
+              "relativeTimeRange": { "from": 3600, "to": 0 },
+              "datasourceUid": "__expr__",
+              "model": {
+                "type": "threshold",
+                "expression": "A",
+                "conditions": [
+                  {
+                    "evaluator": {
+                      "params": [3000],
+                      "type": "gt"
+                    },
+                    "operator": { "type": "and" },
+                    "query": { "params": ["C", "1m", "now"] },
+                    "reducer": { "params": [], "type": "last" },
+                    "type": "query"
+                  }
+                ]
+              }
+            }
+          ],
+          "noDataState": "NoData",
+          "execErrState": "Alerting",
+          "for": "30m",
+          "annotations": {
+            "summary": "EC đất quá cao ({{ $values.A }} µS/cm) — nguy cơ mặn!",
+            "description": "Độ dẫn điện {{ $values.A }} µS/cm, vượt ngưỡng 3000. Đất có thể bị nhiễm mặn. Cần rửa mặn bằng nước ngọt."
+          },
+          "labels": {
+            "severity": "warning",
+            "team": "smartfarm"
+          }
+        },
+        {
+          "uid": "sensor-offline",
+          "title": "📡 Sensor Offline (No Data)",
+          "condition": "C",
+          "data": [
+            {
+              "refId": "A",
+              "relativeTimeRange": { "from": 1800, "to": 0 },
+              "datasourceUid": "influxdb",
+              "model": {
+                "query": "from(bucket: \"soil_data\")\n  |> range(start: -30m)\n  |> filter(fn: (r) => r._measurement == \"soil\")\n  |> filter(fn: (r) => r._field == \"temperature\")\n  |> count()",
+                "refId": "A"
+              }
+            },
+            {
+              "refId": "C",
+              "relativeTimeRange": { "from": 1800, "to": 0 },
+              "datasourceUid": "__expr__",
+              "model": {
+                "type": "threshold",
+                "expression": "A",
+                "conditions": [
+                  {
+                    "evaluator": {
+                      "params": [1],
+                      "type": "lt"
+                    },
+                    "operator": { "type": "and" },
+                    "query": { "params": ["C", "1m", "now"] },
+                    "reducer": { "params": [], "type": "last" },
+                    "type": "query"
+                  }
+                ]
+              }
+            }
+          ],
+          "noDataState": "Alerting",
+          "execErrState": "Alerting",
+          "for": "0s",
+          "annotations": {
+            "summary": "Cảm biến offline — không có dữ liệu trong 30 phút!",
+            "description": "Không nhận được dữ liệu từ cảm biến đất trong 30 phút qua. Kiểm tra: (1) Pin/solar, (2) E78-DTU kết nối, (3) Gateway E870, (4) Sensor RS485."
+          },
+          "labels": {
+            "severity": "critical",
+            "team": "smartfarm"
+          }
+        }
+      ]
+    }
+  ]
+}
