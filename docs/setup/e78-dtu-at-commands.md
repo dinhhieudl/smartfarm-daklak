@@ -1,5 +1,8 @@
-# E78-DTU(900LN22) — AT Command Quick Reference
+# E78-DTU(900LN22) — AT Command Quick Reference (Chip 6601)
 
+> ⚠️ **This is for the E78-DTU(900LN22) with chip 6601** — NOT the E78-900TBL-01A dev board (ASR6505)
+> The user's actual board is E78-900TBL-01A → see `e78-900tbl-at-commands.md` instead
+> 
 > For SmartFarm DakLak: connecting soil sensor to E870 LoRaWAN gateway
 
 ## Connection
