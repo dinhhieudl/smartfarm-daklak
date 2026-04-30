@@ -139,6 +139,20 @@ services:
       - GF_USERS_ALLOW_SIGN_UP=false
       - TZ=Asia/Ho_Chi_Minh
 
+  # ─── Smart Control & Advisory Service ───
+  smart-control:
+    build: ../smart-control
+    container_name: sf-smart-control
+    restart: unless-stopped
+    depends_on:
+      - mosquitto
+    ports:
+      - "3002:3002"
+    environment:
+      - MQTT_URL=mqtt://mosquitto:1883
+      - PORT=3002
+      - TZ=Asia/Ho_Chi_Minh
+
 volumes:
   postgres-data:
   redis-data:

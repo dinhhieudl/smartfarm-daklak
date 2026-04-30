@@ -1,0 +1,21 @@
+version: "3.8"
+
+services:
+  smart-control:
+    build: .
+    container_name: sf-smart-control
+    restart: unless-stopped
+    ports:
+      - "3002:3002"
+    environment:
+      - MQTT_URL=mqtt://mosquitto:1883
+      - PORT=3002
+      - TZ=Asia/Ho_Chi_Minh
+    depends_on:
+      - mosquitto
+    networks:
+      - smartfarm
+
+networks:
+  smartfarm:
+    external: true
