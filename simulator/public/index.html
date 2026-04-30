@@ -1,0 +1,647 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🌱 SmartFarm DakLak - Sensor Simulator</title>
+<style>
+/* ─── Reset & Variables ──────────────────────────────── */
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --bg:#0a0f0a;--bg2:#111a11;--bg3:#162016;--bg4:#1c2a1c;
+  --green:#4caf50;--green2:#2e7d32;--green-dim:#1b5e20;
+  --brown:#8d6e63;--brown2:#6d4c41;
+  --gold:#f9a825;--orange:#ef6c00;--red:#e53935;
+  --cyan:#00bcd4;--blue:#42a5f5;
+  --text:#e0e0e0;--text2:#a5d6a7;--text3:#66bb6a;
+  --border:#2e3b2e;
+  --radius:12px;
+}
+html{font-size:14px}
+body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden}
+
+/* ─── Scrollbar ──────────────────────────────────────── */
+::-webkit-scrollbar{width:6px;height:6px}
+::-webkit-scrollbar-track{background:var(--bg2)}
+::-webkit-scrollbar-thumb{background:var(--green-dim);border-radius:3px}
+::-webkit-scrollbar-thumb:hover{background:var(--green2)}
+
+/* ─── Header ─────────────────────────────────────────── */
+.header{
+  background:linear-gradient(135deg,var(--bg3) 0%,var(--bg4) 100%);
+  border-bottom:1px solid var(--border);
+  padding:16px 24px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px
+}
+.header-left{display:flex;align-items:center;gap:16px}
+.header-left h1{font-size:1.5rem;font-weight:700;color:var(--green)}
+.header-left h1 span{color:var(--brown)}
+.header-left .subtitle{font-size:.85rem;color:var(--text2)}
+.status-pills{display:flex;gap:8px;flex-wrap:wrap}
+.pill{
+  padding:4px 12px;border-radius:20px;font-size:.75rem;font-weight:600;
+  display:flex;align-items:center;gap:6px
+}
+.pill .dot{width:8px;height:8px;border-radius:50%;display:inline-block}
+.pill.ok{background:#1b5e2040;color:var(--green);border:1px solid #2e7d3260}
+.pill.ok .dot{background:var(--green);box-shadow:0 0 6px var(--green)}
+.pill.err{background:#b71c1c30;color:var(--red);border:1px solid #e5393560}
+.pill.err .dot{background:var(--red);box-shadow:0 0 6px var(--red)}
+
+/* ─── Main Layout ────────────────────────────────────── */
+.main{display:grid;grid-template-columns:1fr 340px;gap:0;min-height:calc(100vh - 64px)}
+@media(max-width:1100px){.main{grid-template-columns:1fr}}
+
+/* ─── Left: Dashboard ────────────────────────────────── */
+.dashboard{padding:20px;overflow-y:auto;max-height:calc(100vh - 64px)}
+.section-title{
+  font-size:1rem;font-weight:600;color:var(--text2);
+  margin:20px 0 12px;padding-bottom:6px;border-bottom:1px solid var(--border);
+  display:flex;align-items:center;gap:8px
+}
+.section-title:first-child{margin-top:0}
+
+/* ─── Gauge Grid ─────────────────────────────────────── */
+.gauge-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:16px}
+.gauge-card{
+  background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);
+  padding:16px;text-align:center;transition:border-color .3s
+}
+.gauge-card:hover{border-color:var(--green2)}
+.gauge-card .label{font-size:.8rem;color:var(--text2);margin-bottom:8px;font-weight:500}
+.gauge-card .value{font-size:1.8rem;font-weight:700;margin:8px 0 4px}
+.gauge-card .unit{font-size:.7rem;color:var(--text2)}
+.gauge-svg{display:block;margin:0 auto}
+
+/* Gauge colors */
+.g-temp .value{color:var(--orange)}
+.g-moist .value{color:var(--blue)}
+.g-ec .value{color:var(--gold)}
+.g-sal .value{color:var(--brown)}
+.g-n .value{color:#66bb6a}
+.g-p .value{color:#ab47bc}
+.g-k .value{color:#ef5350}
+.g-ph .value{color:var(--cyan)}
+
+/* ─── Chart ──────────────────────────────────────────── */
+.chart-wrap{
+  background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);
+  padding:16px;margin-top:16px
+}
+.chart-wrap canvas{width:100%!important;height:220px!important}
+
+/* ─── Event Log ──────────────────────────────────────── */
+.event-log{
+  background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);
+  padding:12px;margin-top:16px;max-height:220px;overflow-y:auto;font-size:.8rem
+}
+.event-log .evt{padding:4px 0;border-bottom:1px solid var(--border);display:flex;gap:8px;align-items:baseline}
+.event-log .evt:last-child{border:none}
+.event-log .evt-time{color:var(--text3);font-size:.7rem;white-space:nowrap;min-width:55px}
+.event-log .evt-critical{color:var(--red)}
+.event-log .evt-warning{color:var(--gold)}
+.event-log .evt-info{color:var(--text2)}
+
+/* ─── Right Sidebar: Controls ────────────────────────── */
+.sidebar{
+  background:var(--bg2);border-left:1px solid var(--border);
+  padding:20px;overflow-y:auto;max-height:calc(100vh - 64px)
+}
+@media(max-width:1100px){
+  .sidebar{border-left:none;border-top:1px solid var(--border);max-height:none}
+}
+.ctrl-section{margin-bottom:20px}
+.ctrl-section h3{font-size:.85rem;color:var(--text2);margin-bottom:10px;font-weight:600;display:flex;align-items:center;gap:6px}
+
+/* Preset buttons */
+.preset-grid{display:flex;flex-direction:column;gap:6px}
+.preset-btn{
+  background:var(--bg3);border:1px solid var(--border);border-radius:8px;
+  padding:8px 12px;color:var(--text);cursor:pointer;text-align:left;
+  font-size:.8rem;transition:all .2s
+}
+.preset-btn:hover{border-color:var(--green2);background:var(--bg4)}
+.preset-btn.active{border-color:var(--green);background:#1b5e2030}
+.preset-btn .preset-name{font-weight:600}
+.preset-btn .preset-desc{font-size:.7rem;color:var(--text3);margin-top:2px}
+
+/* Sliders */
+.param-slider{margin-bottom:12px}
+.param-slider .slider-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:4px}
+.param-slider .slider-label{font-size:.8rem;color:var(--text)}
+.param-slider .slider-value{
+  font-size:.8rem;font-weight:700;min-width:60px;text-align:right;
+  font-variant-numeric:tabular-nums
+}
+.param-slider input[type=range]{
+  width:100%;height:6px;-webkit-appearance:none;appearance:none;
+  background:var(--bg);border-radius:3px;outline:none;cursor:pointer
+}
+.param-slider input[type=range]::-webkit-slider-thumb{
+  -webkit-appearance:none;width:16px;height:16px;border-radius:50%;
+  background:var(--green);cursor:pointer;border:2px solid var(--bg2)
+}
+
+/* Auto controls */
+.auto-controls{display:flex;flex-direction:column;gap:10px}
+.toggle-row{display:flex;align-items:center;justify-content:space-between}
+.toggle-row label{font-size:.8rem;color:var(--text)}
+.toggle{
+  position:relative;width:44px;height:24px;cursor:pointer
+}
+.toggle input{opacity:0;width:0;height:0}
+.toggle .slider{
+  position:absolute;top:0;left:0;right:0;bottom:0;
+  background:var(--bg);border-radius:12px;transition:.3s;border:1px solid var(--border)
+}
+.toggle .slider:before{
+  content:'';position:absolute;height:18px;width:18px;left:2px;bottom:2px;
+  background:var(--text3);border-radius:50%;transition:.3s
+}
+.toggle input:checked+.slider{background:var(--green2);border-color:var(--green)}
+.toggle input:checked+.slider:before{transform:translateX(20px);background:#fff}
+
+.control-input{
+  display:flex;align-items:center;gap:8px;margin-top:6px
+}
+.control-input label{font-size:.75rem;color:var(--text3);min-width:50px}
+.control-input input[type=number]{
+  background:var(--bg);border:1px solid var(--border);border-radius:6px;
+  padding:4px 8px;color:var(--text);width:70px;font-size:.8rem;text-align:center
+}
+.control-input input[type=number]:focus{outline:none;border-color:var(--green)}
+
+/* Send button */
+.send-btn{
+  width:100%;padding:10px;border:2px solid var(--green);border-radius:8px;
+  background:transparent;color:var(--green);font-weight:700;font-size:.9rem;
+  cursor:pointer;transition:all .2s;margin-top:8px
+}
+.send-btn:hover{background:var(--green);color:var(--bg)}
+.send-btn:active{transform:scale(.98)}
+
+/* Stats */
+.stats{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px}
+.stat-box{
+  background:var(--bg);border:1px solid var(--border);border-radius:8px;
+  padding:8px;text-align:center
+}
+.stat-box .stat-val{font-size:1.2rem;font-weight:700;color:var(--green)}
+.stat-box .stat-label{font-size:.65rem;color:var(--text3);margin-top:2px}
+
+/* ─── Health Bar ─────────────────────────────────────── */
+.health-bar{margin-top:16px}
+.health-bar .bar-header{display:flex;justify-content:space-between;margin-bottom:6px}
+.health-bar .bar-header span{font-size:.8rem;color:var(--text)}
+.health-bar .bar-track{
+  height:10px;background:var(--bg);border-radius:5px;overflow:hidden;border:1px solid var(--border)
+}
+.health-bar .bar-fill{height:100%;border-radius:5px;transition:width .5s,background .5s}
+
+/* ─── Footer ─────────────────────────────────────────── */
+.footer{
+  text-align:center;padding:8px;font-size:.7rem;color:var(--text3);
+  border-top:1px solid var(--border);background:var(--bg2)
+}
+</style>
+</head>
+<body>
+
+<!-- Header -->
+<div class="header">
+  <div class="header-left">
+    <h1>🌱 SmartFarm <span>DakLak</span></h1>
+    <div class="subtitle">Soil Sensor Simulator</div>
+  </div>
+  <div class="status-pills">
+    <div class="pill" id="pill-mqtt"><span class="dot"></span>MQTT</div>
+    <div class="pill ok"><span class="dot"></span>Simulator</div>
+    <div class="pill ok" id="pill-sent"><span class="dot"></span><span id="sent-count">0</span> sent</div>
+  </div>
+</div>
+
+<!-- Main -->
+<div class="main">
+
+  <!-- Left: Dashboard -->
+  <div class="dashboard">
+    <div class="section-title">📊 Soil Parameters</div>
+    <div class="gauge-grid" id="gauge-grid"></div>
+
+    <!-- Health Score -->
+    <div class="section-title">🎯 Soil Health Score</div>
+    <div class="health-bar">
+      <div class="bar-header">
+        <span>Điểm sức khỏe đất</span>
+        <span id="health-score" style="color:var(--green);font-weight:700">-- / 100</span>
+      </div>
+      <div class="bar-track"><div class="bar-fill" id="health-fill" style="width:0%;background:var(--green)"></div></div>
+      <div style="font-size:.7rem;color:var(--text3);margin-top:4px" id="health-detail"></div>
+    </div>
+
+    <!-- Time Series Chart -->
+    <div class="section-title">📈 History (last 60 readings)</div>
+    <div class="chart-wrap"><canvas id="ts-chart"></canvas></div>
+
+    <!-- Event Log -->
+    <div class="section-title">📋 Event Log</div>
+    <div class="event-log" id="event-log"><div class="evt"><span class="evt-time">--</span><span class="evt-info">Chờ dữ liệu...</span></div></div>
+  </div>
+
+  <!-- Right: Controls -->
+  <div class="sidebar">
+
+    <!-- Presets -->
+    <div class="ctrl-section">
+      <h3>📋 Scenario Presets</h3>
+      <div class="preset-grid" id="preset-grid"></div>
+    </div>
+
+    <!-- Parameter Sliders -->
+    <div class="ctrl-section">
+      <h3>🎛️ Manual Control</h3>
+      <div id="slider-container"></div>
+    </div>
+
+    <!-- Auto Mode -->
+    <div class="ctrl-section">
+      <h3>⚙️ Simulation</h3>
+      <div class="auto-controls">
+        <div class="toggle-row">
+          <label>Auto Mode</label>
+          <label class="toggle"><input type="checkbox" id="auto-toggle"><span class="slider"></span></label>
+        </div>
+        <div class="control-input">
+          <label>Interval</label>
+          <input type="number" id="interval-input" value="30" min="1" max="300">
+          <span style="font-size:.75rem;color:var(--text3)">giây</span>
+        </div>
+        <div class="control-input">
+          <label>Variance</label>
+          <input type="number" id="variation-input" value="2" min="0" max="20" step="0.5">
+          <span style="font-size:.75rem;color:var(--text3)">%</span>
+        </div>
+        <button class="send-btn" id="send-once-btn">📡 Send Once</button>
+      </div>
+    </div>
+
+    <!-- Stats -->
+    <div class="ctrl-section">
+      <h3>📊 Statistics</h3>
+      <div class="stats">
+        <div class="stat-box"><div class="stat-val" id="stat-sent">0</div><div class="stat-label">Messages Sent</div></div>
+        <div class="stat-box"><div class="stat-val" id="stat-events">0</div><div class="stat-label">Events</div></div>
+        <div class="stat-box"><div class="stat-val" id="stat-interval">30s</div><div class="stat-label">Interval</div></div>
+        <div class="stat-box"><div class="stat-val" id="stat-scenario">Normal</div><div class="stat-label">Scenario</div></div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<div class="footer">SmartFarm DakLak Simulator &bull; Data via MQTT → ChirpStack → Node-RED → InfluxDB → Grafana</div>
+
+<script src="/socket.io/socket.io.js"></script>
+<script>
+// ─── Gauge Definitions ────────────────────────────────
+const GAUGES = [
+  { key:'temperature', label:'🌡️ Temperature', unit:'°C', min:-10, max:60, cls:'g-temp',
+    colors:[[15,'#42a5f5'],[25,'#66bb6a'],[35,'#f9a825'],[45,'#e53935']] },
+  { key:'moisture', label:'💧 Moisture', unit:'%VWC', min:0, max:100, cls:'g-moist',
+    colors:[[20,'#e53935'],[40,'#f9a825'],[60,'#66bb6a'],[80,'#42a5f5']] },
+  { key:'ec', label:'⚡ EC', unit:'µS/cm', min:0, max:5000, cls:'g-ec',
+    colors:[[500,'#66bb6a'],[1500,'#f9a825'],[3000,'#ef6c00'],[4500,'#e53935']] },
+  { key:'salinity', label:'🧂 Salinity', unit:'ppm', min:0, max:3000, cls:'g-sal',
+    colors:[[500,'#66bb6a'],[1000,'#f9a825'],[2000,'#ef6c00'],[2800,'#e53935']] },
+  { key:'nitrogen', label:'🌿 Nitrogen (N)', unit:'mg/kg', min:0, max:400, cls:'g-n',
+    colors:[[50,'#e53935'],[100,'#f9a825'],[200,'#66bb6a'],[350,'#42a5f5']] },
+  { key:'phosphorus', label:'🌿 Phosphorus (P)', unit:'mg/kg', min:0, max:150, cls:'g-p',
+    colors:[[15,'#e53935'],[30,'#f9a825'],[60,'#66bb6a'],[120,'#ab47bc']] },
+  { key:'potassium', label:'🌿 Potassium (K)', unit:'mg/kg', min:0, max:400, cls:'g-k',
+    colors:[[80,'#e53935'],[150,'#f9a825'],[250,'#66bb6a'],[350,'#ef5350']] },
+  { key:'ph', label:'🧪 pH', unit:'pH', min:0, max:14, cls:'g-ph',
+    colors:[[4.5,'#e53935'],[5.5,'#f9a825'],[6.5,'#66bb6a'],[7.5,'#42a5f5']] }
+];
+
+// ─── Build Gauge SVGs ─────────────────────────────────
+function buildGauges() {
+  const grid = document.getElementById('gauge-grid');
+  GAUGES.forEach(g => {
+    const card = document.createElement('div');
+    card.className = 'gauge-card ' + g.cls;
+    card.innerHTML = `
+      <div class="label">${g.label}</div>
+      <svg class="gauge-svg" width="160" height="100" viewBox="0 0 160 100">
+        <path id="arc-bg-${g.key}" d="" stroke="#1c2a1c" stroke-width="10" fill="none" stroke-linecap="round"/>
+        <path id="arc-${g.key}" d="" stroke="#66bb6a" stroke-width="10" fill="none" stroke-linecap="round"/>
+        <text x="80" y="75" text-anchor="middle" fill="#e0e0e0" font-size="22" font-weight="700" id="val-${g.key}">--</text>
+      </svg>
+      <div class="unit">${g.unit}</div>
+    `;
+    grid.appendChild(card);
+
+    // Draw background arc
+    const bgPath = describeArc(80, 55, 40, -220, 40);
+    document.getElementById('arc-bg-' + g.key).setAttribute('d', bgPath);
+  });
+}
+
+function describeArc(cx, cy, r, startAngle, endAngle) {
+  const s = polarToCartesian(cx, cy, r, endAngle);
+  const e = polarToCartesian(cx, cy, r, startAngle);
+  const large = endAngle - startAngle <= 180 ? '0' : '1';
+  return `M ${s.x} ${s.y} A ${r} ${r} 0 ${large} 0 ${e.x} ${e.y}`;
+}
+
+function polarToCartesian(cx, cy, r, angleDeg) {
+  const rad = (angleDeg - 90) * Math.PI / 180;
+  return { x: cx + r * Math.cos(rad), y: cy + r * Math.sin(rad) };
+}
+
+function getGaugeColor(g, value) {
+  for (let i = g.colors.length - 1; i >= 0; i--) {
+    if (value >= g.colors[i][0]) return g.colors[i][1];
+  }
+  return g.colors[0][1];
+}
+
+function updateGauge(key, value, g) {
+  const ratio = Math.max(0, Math.min(1, (value - g.min) / (g.max - g.min)));
+  const angle = -220 + ratio * 260;
+  const arcPath = describeArc(80, 55, 40, -220, angle);
+  const arc = document.getElementById('arc-' + key);
+  const val = document.getElementById('val-' + key);
+  arc.setAttribute('d', arcPath);
+  arc.setAttribute('stroke', getGaugeColor(g, value));
+  val.textContent = (g.key === 'ec' || g.key === 'salinity' || g.key === 'nitrogen' || g.key === 'phosphorus' || g.key === 'potassium')
+    ? Math.round(value) : value.toFixed(1);
+}
+
+// ─── Time Series Chart (Canvas) ───────────────────────
+const CHART = { data: {}, maxPoints: 60, colors: {} };
+GAUGES.forEach(g => {
+  CHART.data[g.key] = [];
+  CHART.colors[g.key] = g.colors[g.colors.length - 1][1];
+});
+
+function drawChart() {
+  const canvas = document.getElementById('ts-chart');
+  const ctx = canvas.getContext('2d');
+  const dpr = window.devicePixelRatio || 1;
+  const rect = canvas.getBoundingClientRect();
+  canvas.width = rect.width * dpr;
+  canvas.height = 220 * dpr;
+  ctx.scale(dpr, dpr);
+  const W = rect.width, H = 220;
+  const pad = { t: 20, r: 16, b: 30, l: 50 };
+  const cw = W - pad.l - pad.r, ch = H - pad.t - pad.b;
+
+  ctx.clearRect(0, 0, W, H);
+
+  // Determine which params to show (show moisture + temperature by default)
+  const showKeys = ['moisture', 'temperature', 'ph'];
+  const datasets = showKeys.map(k => ({ key: k, data: CHART.data[k], color: CHART.colors[k] }));
+
+  // Find Y range
+  let yMin = Infinity, yMax = -Infinity;
+  datasets.forEach(ds => {
+    ds.data.forEach(v => { yMin = Math.min(yMin, v); yMax = Math.max(yMax, v); });
+  });
+  if (yMin === Infinity) { yMin = 0; yMax = 100; }
+  const yPad = (yMax - yMin) * 0.1 || 10;
+  yMin -= yPad; yMax += yPad;
+
+  // Grid
+  ctx.strokeStyle = '#2e3b2e';
+  ctx.lineWidth = 0.5;
+  for (let i = 0; i <= 4; i++) {
+    const y = pad.t + ch - (i / 4) * ch;
+    ctx.beginPath(); ctx.moveTo(pad.l, y); ctx.lineTo(W - pad.r, y); ctx.stroke();
+    ctx.fillStyle = '#66bb6a60';
+    ctx.font = '10px sans-serif';
+    ctx.textAlign = 'right';
+    ctx.fillText((yMin + (i / 4) * (yMax - yMin)).toFixed(0), pad.l - 6, y + 3);
+  }
+
+  // X labels
+  ctx.fillStyle = '#66bb6a60';
+  ctx.textAlign = 'center';
+  const maxLen = Math.max(...datasets.map(ds => ds.data.length));
+  if (maxLen > 1) {
+    for (let i = 0; i < maxLen; i += Math.floor(maxLen / 5)) {
+      const x = pad.l + (i / (maxLen - 1)) * cw;
+      ctx.fillText(i.toString(), x, H - 8);
+    }
+  }
+
+  // Draw lines
+  datasets.forEach(ds => {
+    if (ds.data.length < 2) return;
+    ctx.beginPath();
+    ctx.strokeStyle = ds.color;
+    ctx.lineWidth = 2;
+    ctx.lineJoin = 'round';
+    ds.data.forEach((v, i) => {
+      const x = pad.l + (i / (ds.data.length - 1)) * cw;
+      const y = pad.t + ch - ((v - yMin) / (yMax - yMin)) * ch;
+      i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+    });
+    ctx.stroke();
+
+    // Fill area
+    ctx.lineTo(pad.l + cw, pad.t + ch);
+    ctx.lineTo(pad.l, pad.t + ch);
+    ctx.closePath();
+    ctx.fillStyle = ds.color + '15';
+    ctx.fill();
+  });
+
+  // Legend
+  let lx = pad.l + 8;
+  datasets.forEach(ds => {
+    ctx.fillStyle = ds.color;
+    ctx.fillRect(lx, 6, 12, 3);
+    ctx.fillStyle = '#e0e0e0';
+    ctx.font = '10px sans-serif';
+    ctx.textAlign = 'left';
+    ctx.fillText(ds.key, lx + 16, 10);
+    lx += ctx.measureText(ds.key).width + 32;
+  });
+}
+
+// ─── Health Score ──────────────────────────────────────
+function calcHealth(d) {
+  let score = 100;
+  let details = [];
+
+  // Moisture (ideal: 40-70)
+  if (d.moisture < 30) { score -= 20; details.push('Moisture ↓'); }
+  else if (d.moisture > 80) { score -= 15; details.push('Moisture ↑'); }
+  else if (d.moisture < 40) { score -= 5; }
+  else if (d.moisture > 70) { score -= 5; }
+
+  // pH (ideal for coffee: 5.0-6.5)
+  if (d.ph < 4.5 || d.ph > 7.5) { score -= 20; details.push('pH abnormal'); }
+  else if (d.ph < 5.0 || d.ph > 6.5) { score -= 8; details.push('pH suboptimal'); }
+
+  // EC (ideal: < 1000)
+  if (d.ec > 3000) { score -= 20; details.push('EC high (salinity)'); }
+  else if (d.ec > 1500) { score -= 10; details.push('EC elevated'); }
+
+  // Temperature (ideal: 20-35)
+  if (d.temperature > 40 || d.temperature < 10) { score -= 15; details.push('Temp extreme'); }
+  else if (d.temperature > 35 || d.temperature < 15) { score -= 5; }
+
+  // NPK
+  if (d.nitrogen < 50) { score -= 10; details.push('N low'); }
+  if (d.potassium < 80) { score -= 5; details.push('K low'); }
+
+  score = Math.max(0, Math.min(100, score));
+  return { score, details };
+}
+
+function updateHealth(d) {
+  const { score, details } = calcHealth(d);
+  const el = document.getElementById('health-score');
+  const fill = document.getElementById('health-fill');
+  const detail = document.getElementById('health-detail');
+  el.textContent = score + ' / 100';
+  fill.style.width = score + '%';
+  if (score >= 80) { fill.style.background = '#66bb6a'; el.style.color = '#66bb6a'; }
+  else if (score >= 60) { fill.style.background = '#f9a825'; el.style.color = '#f9a825'; }
+  else { fill.style.background = '#e53935'; el.style.color = '#e53935'; }
+  detail.textContent = details.length ? 'Issues: ' + details.join(', ') : 'Tất cả thông số trong ngưỡng tốt ☕';
+}
+
+// ─── Build Presets ─────────────────────────────────────
+function buildPresets(presets) {
+  const grid = document.getElementById('preset-grid');
+  presets.forEach(p => {
+    const btn = document.createElement('button');
+    btn.className = 'preset-btn';
+    btn.dataset.key = p.key;
+    btn.innerHTML = `<div class="preset-name">${p.name}</div><div class="preset-desc">${p.desc}</div>`;
+    btn.onclick = () => {
+      socket.emit('apply_preset', p.key);
+      document.querySelectorAll('.preset-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+    };
+    grid.appendChild(btn);
+  });
+}
+
+// ─── Build Sliders ────────────────────────────────────
+function buildSliders() {
+  const container = document.getElementById('slider-container');
+  GAUGES.forEach(g => {
+    const div = document.createElement('div');
+    div.className = 'param-slider';
+    const step = (g.key === 'ph') ? 0.1 : (g.key === 'moisture' || g.key === 'temperature') ? 0.5 : 1;
+    div.innerHTML = `
+      <div class="slider-header">
+        <span class="slider-label">${g.label}</span>
+        <span class="slider-value" id="sv-${g.key}">--</span>
+      </div>
+      <input type="range" min="${g.min}" max="${g.max}" step="${step}" value="50" id="sl-${g.key}">
+    `;
+    container.appendChild(div);
+    const slider = div.querySelector('input');
+    slider.addEventListener('input', () => {
+      socket.emit('update_param', { param: g.key, value: slider.value });
+    });
+  });
+}
+
+// ─── Socket.IO ────────────────────────────────────────
+const socket = io();
+
+socket.on('init', (state) => {
+  buildGauges();
+  buildSliders();
+  buildPresets(state.presets);
+  updateAll(state.data);
+  updateMqttStatus(state.mqttConnected);
+  document.getElementById('sent-count').textContent = state.sent;
+  document.getElementById('stat-sent').textContent = state.sent;
+  state.events.forEach(e => addEventUI(e));
+  if (state.config.autoMode) document.getElementById('auto-toggle').checked = true;
+  document.getElementById('interval-input').value = state.config.intervalSec;
+  document.getElementById('variation-input').value = state.config.variation;
+});
+
+socket.on('sensor_update', (msg) => {
+  updateAll(msg.data);
+  document.getElementById('sent-count').textContent = msg.sent;
+  document.getElementById('stat-sent').textContent = msg.sent;
+});
+
+socket.on('mqtt_status', (s) => updateMqttStatus(s.connected));
+
+socket.on('config_update', (cfg) => {
+  document.getElementById('stat-interval').textContent = cfg.intervalSec + 's';
+  document.getElementById('stat-scenario').textContent = cfg.scenario;
+});
+
+socket.on('event', (evt) => addEventUI(evt));
+
+function updateAll(data) {
+  GAUGES.forEach(g => {
+    updateGauge(g.key, data[g.key], g);
+    const sl = document.getElementById('sl-' + g.key);
+    const sv = document.getElementById('sv-' + g.key);
+    if (sl && document.activeElement !== sl) sl.value = data[g.key];
+    if (sv) sv.textContent = (g.key === 'ec' || g.key === 'salinity' || g.key === 'nitrogen' || g.key === 'phosphorus' || g.key === 'potassium')
+      ? Math.round(data[g.key]) : data[g.key].toFixed(1);
+  });
+
+  // Update chart
+  GAUGES.forEach(g => {
+    CHART.data[g.key].push(data[g.key]);
+    if (CHART.data[g.key].length > CHART.maxPoints) CHART.data[g.key].shift();
+  });
+  drawChart();
+
+  // Health
+  updateHealth(data);
+
+  // Events count
+  document.getElementById('stat-events').textContent = document.getElementById('event-log').children.length;
+}
+
+function updateMqttStatus(connected) {
+  const pill = document.getElementById('pill-mqtt');
+  pill.className = connected ? 'pill ok' : 'pill err';
+  pill.innerHTML = `<span class="dot"></span>MQTT ${connected ? 'Connected' : 'Disconnected'}`;
+}
+
+function addEventUI(evt) {
+  const log = document.getElementById('event-log');
+  const time = new Date(evt.time).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+  const div = document.createElement('div');
+  div.className = 'evt';
+  div.innerHTML = `<span class="evt-time">${time}</span><span class="evt-${evt.level}">${evt.message}</span>`;
+  log.insertBefore(div, log.firstChild);
+  if (log.children.length > 100) log.removeChild(log.lastChild);
+}
+
+// ─── Control Events ───────────────────────────────────
+document.getElementById('auto-toggle').addEventListener('change', function() {
+  socket.emit('set_auto', this.checked);
+});
+
+document.getElementById('interval-input').addEventListener('change', function() {
+  socket.emit('set_interval', this.value);
+});
+
+document.getElementById('variation-input').addEventListener('change', function() {
+  socket.emit('set_variation', this.value);
+});
+
+document.getElementById('send-once-btn').addEventListener('click', () => {
+  socket.emit('send_once');
+});
+
+// ─── Resize chart on window resize ────────────────────
+window.addEventListener('resize', drawChart);
+</script>
+</body>
+</html>

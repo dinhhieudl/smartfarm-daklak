@@ -11,11 +11,30 @@ LoRaWAN-based precision agriculture system for DakLak, Vietnam.
 | Node (Raw LoRa) | E90-DTU(900SL22) | LoRa data radio (备用) | ✅ Đã có |
 | Sensor | Soil Multi-Parameter (Temp/Moisture/EC/NPK/pH) | Field data采集 | ✅ Đã có |
 
+## Quick Start
+
+```bash
+# 1. Clone
+git clone https://github.com/dinhhieudl/smartfarm-daklak.git
+cd smartfarm-daklak
+
+# 2. Server stack
+cd server && docker compose up -d && cd ..
+
+# 3. Simulator
+cd simulator && npm install && npm start
+# → Mở http://localhost:3001
+```
+
+📖 [Hướng dẫn deploy đầy đủ](DEPLOY.md)
+
 ## Quick Links
 
 - [Hardware Datasheets](docs/hardware/)
 - [System Architecture & Planning](docs/planning/)
 - [Setup Guides](docs/setup/)
+- [Deployment Guide](DEPLOY.md)
+- [Simulator](simulator/)
 
 ## Project Status
 

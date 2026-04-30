@@ -1,6 +1,6 @@
 # SmartFarm DakLak - Project Progress
 
-> Cập nhật lần cuối: 2026-04-28 10:03 GMT+8
+> Cập nhật lần cuối: 2026-04-30 12:23 GMT+8
 
 ## Tổng quan dự án
 
@@ -81,6 +81,12 @@ smartfarm-daklak/
 │   │   ├── chirpstack-payload-decoder.js    ✅ Payload decoder (JavaScript)
 │   │   └── grafana/alerting/soil-alerts.json ✅ Alert rules (6 rules)
 │   └── README.md                            ✅ Server instructions
+├── simulator/                               ✅ Web-based sensor simulator
+│   ├── server.js                            ✅ Express + Socket.IO + MQTT publisher
+│   ├── public/index.html                    ✅ Dashboard (gauges, charts, presets)
+│   ├── package.json                         ✅ Dependencies (express, mqtt, socket.io)
+│   ├── .gitignore                           ✅ Exclude node_modules
+│   └── README.md                            ✅ Simulator instructions
 └── software/
     ├── 查看数据软件/                          ✅ ModScan32 + ModSim32 (diagnostic tools)
     └── stm32f103-mini-system/               ✅ STM32 firmware with Modbus reader
@@ -95,8 +101,11 @@ smartfarm-daklak/
 - [x] Cài alert rules (moisture, pH, temp, EC, sensor offline) → `server/config/grafana/alerting/soil-alerts.json`
 - [x] E78-DTU AT command reference → `docs/setup/e78-dtu-at-commands.md`
 - [x] Setup script (Windows + Linux) → `server/setup.bat` + `server/setup.sh`
+- [x] Web simulator (giả lập sensor, test pipeline) → `simulator/`
+- [ ] Deploy server + simulator trên local server — **chờ deploy**
+- [ ] Test simulator → Node-RED → InfluxDB → Grafana pipeline — **chờ deploy**
+- [ ] Cấu hình RAK3272S: AT command cho LoRaWAN join — **cần hardware**
 - [ ] Test sensor với ModScan32 (commissioning) — **cần hardware**
-- [ ] Cấu hình E78-900TBL: AT command cho LoRaWAN join — **cần hardware**
 - [ ] **Chọn phương án tích hợp sensor** (xem bên dưới) — **chờ quyết định**
 - [ ] Register gateway + device trong ChirpStack — **cần deploy server**
 - [ ] Deploy server (docker compose up -d trên laptop)
