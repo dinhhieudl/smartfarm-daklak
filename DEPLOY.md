@@ -35,11 +35,14 @@ docker compose up -d
 docker compose ps
 ```
 
+> **Lưu ý quan trọng:** PostgreSQL cần extension `pg_trgm` (đã cấu hình trong `config/postgres-init/01-extensions.sql`).
+> Nếu ChirpStack không tạo được bảng, kiểm tra postgres logs: `docker logs sf-postgres`
+
 **Truy cập các dịch vụ:**
 
 | Service | URL | Login |
 |---------|-----|-------|
-| ChirpStack | http://localhost:8080 | admin / admin |
+| ChirpStack | http://localhost:8080 | admin / admin1234 (gRPC-web, login qua web UI) |
 | Node-RED | http://localhost:1880 | — |
 | Grafana | http://localhost:3000 | admin / admin |
 | InfluxDB | http://localhost:8086 | admin / admin12345 |
